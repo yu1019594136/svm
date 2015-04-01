@@ -47,14 +47,14 @@ void para_config()
     Para_svm_train.svm_train_parameter.weight_label = weight_label;//该数组在本文件开头处初始化
     Para_svm_train.svm_train_parameter.weight = weight;//该数组在本文件开头处初始化
     Para_svm_train.quiet_mode = 0;//0: outputs;  !0: no outputs
-    Para_svm_train.cross_validation = 4;// 5;// 0;//输入0表示不进行交叉验证，输入n表示进行n折交叉验证（注意n必须大于2）
+    Para_svm_train.cross_validation = 0;// 5;// 0;//输入0表示不进行交叉验证，输入n表示进行n折交叉验证（注意n必须大于2）
     Para_svm_train.training_set_file = "/home/zhouyu/UCI_database/wine/wine.txt.scaled";//C:\\Users\\L Z Hua\\Desktop\\qt_workspace\\0330svm\\build-svm-PC-Debug\\debug\\file1.scaled
     Para_svm_train.model_file = "/home/zhouyu/UCI_database/wine/wine.txt.model";//C:\\Users\\L Z Hua\\Desktop\\qt_workspace\\0330svm\\build-svm-PC-Debug\\debug\\file1.model
 
     /* 配置预测参数 */
     Para_svm_predict.predict_probability = 0;//probability_estimates: whether to predict probability estimates, 0 or 1 (default 0); for one-class SVM only 0 is supported
     Para_svm_predict.quiet_mode = 0;//0: outputs;  !0: no outputs
-    Para_svm_predict.test_file = "/home/zhouyu/UCI_database/wine/wine.txt";//C:\\Users\\L Z Hua\\Desktop\\qt_workspace\\0330svm\\build-svm-PC-Debug\\debug\\file2.scaled
+    Para_svm_predict.test_file = "/home/zhouyu/UCI_database/wine/wine.txt.scaled";//C:\\Users\\L Z Hua\\Desktop\\qt_workspace\\0330svm\\build-svm-PC-Debug\\debug\\file2.scaled
     Para_svm_predict.model_file = "/home/zhouyu/UCI_database/wine/wine.txt.model";//C:\\Users\\L Z Hua\\Desktop\\qt_workspace\\0330svm\\build-svm-PC-Debug\\debug\\file1.model
     Para_svm_predict.output_file = "/home/zhouyu/UCI_database/wine/wine.txt.predict.result";//C:\\Users\\L Z Hua\\Desktop\\qt_workspace\\0330svm\\build-svm-PC-Debug\\debug\\file_predict.result
 
@@ -67,13 +67,13 @@ void para_config()
     result_predict_accuracy.total = 0;
 
     /* 格点搜索相关参数 */
-    Para_grid_search.gamma_begin = -10;//底数为2，下同
-    Para_grid_search.gamma_end = 10;//10;
-    Para_grid_search.gamma_step = 1;
-    Para_grid_search.nu_begin = -10;//注意nu参数取值范围（0,1）开区间
-    Para_grid_search.nu_end = -0.05;
-    Para_grid_search.nu_step = 0.1;//1;
-    Para_grid_search.v_fold = 5;
+    Para_grid_search.d1_begin = -10;//底数为2，下同,搜索参数时第一个参数d1必须是核函数参数g，第二个参数d2是分类器参数(nu or C)
+    Para_grid_search.d1_end = 5;//10;
+    Para_grid_search.d1_step = 1;
+    Para_grid_search.d2_begin = -5;//注意nu参数取值范围（0,1）开区间
+    Para_grid_search.d2_end = -0.05;
+    Para_grid_search.d2_step = 1;//1;
+    Para_grid_search.v_fold = 4;
     Para_grid_search.flag_predict = 1;// 0;//1,表示每个参数在交叉验证之后，再进行模型训练，然后在对测试样本做预测；0表示不做预测
     Para_grid_search.output_file = "/home/zhouyu/UCI_database/wine/wine.grid_search_result.txt";//保存数据格式，第一列g参数，第二列nu参数，第三列交叉验证正确率，第四列预测正确率
 
@@ -94,10 +94,10 @@ int main(void)
 
 /************************** 格点搜索参数 **************************/
 
-//    if(grid_search(&Para_grid_search, &Para_svm_train, &Para_svm_predict) == 0)
-//        printf("Grid search done!\nResults stored in %s\n",Para_grid_search.output_file);
-//    else
-//        printf("Something wrong!\n");
+    if(grid_search(&Para_grid_search, &Para_svm_train, &Para_svm_predict) == 0)
+        printf("Grid search done!\nResults stored in %s\n",Para_grid_search.output_file);
+    else
+        printf("Something wrong!\n");
 /************************** 交叉验证 or 训练模型 **************************/
 //    if(Para_svm_train.cross_validation)//如果参数中选择了交叉验证那么.....
 //        printf("Cross_validation...\n");

@@ -21,18 +21,33 @@ int grid_search(PARA_GRID_SEARCH *para_grid_search, PARA_SVM_TRAIN *para_svm_tra
         exit(1);
     }
 
-    for(i = 0; para_grid_search->gamma_begin + para_grid_search->gamma_step * i <= para_grid_search->gamma_end; i++)
+
+    for(i = 0; para_grid_search->d1_begin + para_grid_search->d1_step * i <= para_grid_search->d1_end; i++)
     {
-        for(j = 0; para_grid_search->nu_begin + para_grid_search->nu_step * j <= para_grid_search->nu_end; j++)
+        /* 保存交叉验证参数到结构体 */
+        grid_search_result.d1_lg = para_grid_search->d1_begin + para_grid_search->d1_step * i;
+        grid_search_result.d1 = pow(2, grid_search_result.d1_lg);
+
+        for(j = 0; para_grid_search->d2_begin + para_grid_search->d2_step * j <= para_grid_search->d2_end; j++)
         {
             /* 保存交叉验证参数到结构体 */
-            grid_search_result.gamma = pow(2, para_grid_search->gamma_begin + para_grid_search->gamma_step * i);
-            grid_search_result.nu = pow(2, para_grid_search->nu_begin + para_grid_search->nu_step * j);
+            grid_search_result.d2_lg = para_grid_search->d2_begin + para_grid_search->d2_step * j;
+            grid_search_result.d2 = pow(2, grid_search_result.d2_lg);
 
             /* 设置交叉验证相关的参数 */
-            para_svm_train->svm_train_parameter.gamma = grid_search_result.gamma;
-            para_svm_train->svm_train_parameter.nu = grid_search_result.nu;//
-            para_svm_train->cross_validation = para_grid_search->v_fold;//设置交叉验证参数，进行交叉验证
+            if(para_svm_train->svm_train_parameter.svm_type == ONE_CLASS)
+            {
+                para_svm_train->svm_train_parameter.gamma = grid_search_result.d1;//搜索参数时第一个参数必须是核函数参数，第二个参数是分类器参数
+                para_svm_train->svm_train_parameter.nu = grid_search_result.d2;
+            }
+            else if(para_svm_train->svm_train_parameter.svm_type == C_SVC)
+            {
+                para_svm_train->svm_train_parameter.gamma = grid_search_result.d1;//搜索参数时第一个参数必须是核函数参数，第二个参数是分类器参数
+                para_svm_train->svm_train_parameter.C = grid_search_result.d2;
+            }
+
+            /* 设置交叉验证参数，进行交叉验证 */
+            para_svm_train->cross_validation = para_grid_search->v_fold;
 
             /* 调用接口进行交叉验证 */
             if(main_svm_train(para_svm_train) == 0)
@@ -57,15 +72,18 @@ int grid_search(PARA_GRID_SEARCH *para_grid_search, PARA_SVM_TRAIN *para_svm_tra
                     /* 记录预测样本的正确率 */
                     grid_search_result.predict_accuracy = 100 * result_predict_accuracy.correct / result_predict_accuracy.total;
                 }
-                else
-                    grid_search_result.predict_accuracy =0;//不进行预测时，预测样本的正确率全部填写0
+                //else
+                //   grid_search_result.predict_accuracy =0;//不进行预测时，预测样本的正确率全部填写0
             }
 
-            /* 记录结果到文件，第一列g参数，第二列nu参数，第三列该参数下的交叉验证正确率，第四列该参数下训练模型后对测试样本的预测正确率 */
-            fprintf(output,"%f\t%f\t%f\t%f\n",grid_search_result.gamma, grid_search_result.nu, grid_search_result.cross_validation_accuracy, grid_search_result.predict_accuracy);
-
+            /* 记录结果到文件，第一列log2 d1参数，第二列log2 d2参数，第三列参数d1,第四列参数d2，第五列该参数下的交叉验证正确率，第六列该参数下训练模型后对测试样本的预测正确率(如果flag_predict==0，第六列参数将没有) */
+            if(para_grid_search->flag_predict)
+                fprintf(output,"%f\t%f\t%f\t%f\t%f\t%f\n",grid_search_result.d1_lg, grid_search_result.d2_lg, grid_search_result.d1, grid_search_result.d2, grid_search_result.cross_validation_accuracy, grid_search_result.predict_accuracy);
+            else
+                fprintf(output,"%f\t%f\t%f\t%f\t%f\n",grid_search_result.d1_lg, grid_search_result.d2_lg, grid_search_result.d1, grid_search_result.d2, grid_search_result.cross_validation_accuracy);
         }
     }
     fclose(output);
     return 0;
 }
+

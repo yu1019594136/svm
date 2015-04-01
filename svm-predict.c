@@ -52,6 +52,10 @@ void predict(FILE *input, FILE *output)
 	double error = 0;
 	double sump = 0, sumt = 0, sumpp = 0, sumtt = 0, sumpt = 0;
 
+    /* zy 每次进行预测前先清零 */
+    result_predict_accuracy.correct = 0;
+    result_predict_accuracy.total = 0;
+
 	int svm_type=svm_get_svm_type(model);
 	int nr_class=svm_get_nr_class(model);
 	double *prob_estimates=NULL;
