@@ -15,7 +15,7 @@ typedef struct {
     char *restore_filename;
     char *data_set;
     char *result_filename;
-}PARA_SVM_SCALE;
+} PARA_SVM_SCALE;
 
 /*  */
 int main_svm_scale(PARA_SVM_SCALE *para_svm_scale);

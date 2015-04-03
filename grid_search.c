@@ -53,10 +53,10 @@ int grid_search(PARA_GRID_SEARCH *para_grid_search, PARA_SVM_TRAIN *para_svm_tra
             if(main_svm_train(para_svm_train) == 0)
             {
                 /* 记录交叉验证结果的正确率 */
-                grid_search_result.cross_validation_accuracy = 100 * result_cross_validation_accuracy.correct / result_cross_validation_accuracy.total;
+                grid_search_result.cross_validation_accuracy = 100.0 * result_cross_validation_accuracy.correct / result_cross_validation_accuracy.total;
 
-                /* 如果需要进行预测 */
-                if(para_grid_search->flag_predict)
+                /* 如果没有测试文件或者flag_predict为0，将不会使用该参数下的模型对测试样本做预测 */
+                if(para_svm_predict->test_file && para_grid_search->flag_predict)
                 {
                     /* 重新设置训练参数 */
                     para_svm_train->cross_validation = 0;//将验证折数设为0，表示不进行交叉验证而是进行模型训练
@@ -70,7 +70,7 @@ int grid_search(PARA_GRID_SEARCH *para_grid_search, PARA_SVM_TRAIN *para_svm_tra
                         printf("Predict done!\n");
 
                     /* 记录预测样本的正确率 */
-                    grid_search_result.predict_accuracy = 100 * result_predict_accuracy.correct / result_predict_accuracy.total;
+                    grid_search_result.predict_accuracy = 100.0 * result_predict_accuracy.correct / result_predict_accuracy.total;
                 }
                 //else
                 //   grid_search_result.predict_accuracy =0;//不进行预测时，预测样本的正确率全部填写0

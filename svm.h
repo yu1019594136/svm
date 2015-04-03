@@ -71,6 +71,35 @@ struct svm_model
 				/* 0 if svm_model is created by svm_train */
 };
 
+/*  zy,  svm_all_file_pathname
+用于保存所有文件路径相关的变量，
+
+1、原始数据文件：wine.txt
+
+2、subset之后得到训练和测试样本，wine.txt.train, wine.txt.test
+
+3、数据规则文件wine.txt.range，数据文件缩放后wine.txt.train.scaled, wine.txt.test.scaled
+
+3、训练模型后wine.txt.train.scaled.model、wine.txt.test.scaled
+
+4、预测时数据文件分别为 测试文件wine.txt.test.scaled，模型文件wine.txt.train.scaled.model，保存结果文件 wine.txt.test.scaled.predict.accuracy
+
+5、格点搜索输出文件wine.txt.grid_search_result
+
+*/
+typedef struct
+{
+    char *train_data_filepath;
+    char *test_data_filepath;
+    char *range_filepath;
+    char *train_data_scaled_filepath;
+    char *test_data_scaled_filepath;
+    char *model_filepath;
+    char *predict_accuracy_filepath;
+    char *grid_search_result;
+} SVM_ALL_FILEPATH;
+
+
 struct svm_model *svm_train(const struct svm_problem *prob, const struct svm_parameter *param);
 void svm_cross_validation(const struct svm_problem *prob, const struct svm_parameter *param, int nr_fold, double *target);
 
