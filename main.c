@@ -162,7 +162,7 @@ void para_config()
 
     /* 格点搜索相关参数(分类器类型和核函数类型在训练参数中配置) */
     Para_grid_search.d1_begin = -5;//底数为2，下同,搜索参数时第一个参数d1必须是核函数参数g，第二个参数d2是分类器参数(nu or C)
-    Para_grid_search.d1_end = -15;//10;
+    Para_grid_search.d1_end = -14;//10;
     Para_grid_search.d1_step = -1;
     Para_grid_search.d2_begin = -5;//注意nu参数取值范围（0,1）开区间
     Para_grid_search.d2_end = 5;
