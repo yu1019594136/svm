@@ -6,6 +6,7 @@
 #include "svm-train.h"
 #include "svm-predict.h"
 #include "grid_search.h"
+#include "common.h"
 
 SVM_ALL_FILEPATH Svm_all_filepath;//配置所有文件路径相关的变量
 PARA_SVM_SCALE Para_svm_scale;//缩放参数
@@ -39,7 +40,7 @@ int main(void)
 //    Para_svm_scale.data_set = Svm_all_filepath.train_data_filepath;
 //    Para_svm_scale.result_filename = Svm_all_filepath.train_data_scaled_filepath;
 
-//    if(main_svm_scale(&Para_svm_scale) == 0)
+//    if(main_svm_scale(&Para_svm_scale) == SUCCESS)
 //        printf("Train data scaled!\n");
 //    else
 //        printf("Train data scaling:something wrong! check the data format\n");
@@ -54,7 +55,7 @@ int main(void)
 //        Para_svm_scale.data_set = Svm_all_filepath.test_data_filepath;
 //        Para_svm_scale.result_filename = Svm_all_filepath.test_data_scaled_filepath;
 
-//        if(main_svm_scale(&Para_svm_scale) == 0)
+//        if(main_svm_scale(&Para_svm_scale) == SUCCESS)
 //            printf("Test data scaled!\n");
 //        else
 //            printf("Test data scaling:something wrong! check the data format\n");
@@ -64,7 +65,7 @@ int main(void)
 
 
 /************************** 格点搜索参数 **************************/
-//    if(grid_search(&Para_grid_search, &Para_svm_train, &Para_svm_predict) == 0)
+//    if(grid_search(&Para_grid_search, &Para_svm_train, &Para_svm_predict) == SUCCESS)
 //        printf("Grid search done!\nResults stored in %s\n",Para_grid_search.output_file);
 //    else
 //        printf("Something wrong!\n");
@@ -75,7 +76,7 @@ int main(void)
 //    else
 //        printf("Training ...\n");
 
-//    if((main_svm_train(&Para_svm_train)) == 0)
+//    if((main_svm_train(&Para_svm_train)) == SUCCESS)
 //        printf("Done!\n");
 //    else
 //        printf("Something wrong!\n");
@@ -88,7 +89,7 @@ int main(void)
 //    {
 //        printf("Predicting...\n");
 
-//        if((main_svm_predict(&Para_svm_predict)) == 0)
+//        if((main_svm_predict(&Para_svm_predict)) == SUCCESS)
 //            printf("Done!\n");
 //        else
 //            printf("Something wrong!\n");
@@ -126,8 +127,8 @@ void para_config()
     Para_svm_scale.y_lower = 0.0;
     Para_svm_scale.y_upper = 0.0;
     /* 手动配置 */
-    Svm_all_filepath.train_data_filepath = "/home/zhouyu/UCI_database/wine/wine.txt.train";//训练文件不能为NULL
-    Svm_all_filepath.test_data_filepath = "/home/zhouyu/UCI_database/wine/wine.txt.test";//NULL     如果没有测试文件，此处给NULL
+    Svm_all_filepath.train_data_filepath = "C:\\UCI_database\\wine\\wine.txt.train";//训练文件不能为NULL，"/home/zhouyu/UCI_database/wine/wine.txt.train"
+    Svm_all_filepath.test_data_filepath = "C:\\UCI_database\\wine\\wine.txt.test";//NULL     如果没有测试文件，此处给NULL"/home/zhouyu/UCI_database/wine/wine.txt.test"
     /* 程序自动按规则自动配置 */
     filepath_config(&Svm_all_filepath);
 
@@ -160,11 +161,11 @@ void para_config()
     Para_svm_predict.output_file = Svm_all_filepath.predict_accuracy_filepath;
 
     /* 格点搜索相关参数(分类器类型和核函数类型在训练参数中配置) */
-    Para_grid_search.d1_begin = -10;//底数为2，下同,搜索参数时第一个参数d1必须是核函数参数g，第二个参数d2是分类器参数(nu or C)
-    Para_grid_search.d1_end = 5;//10;
-    Para_grid_search.d1_step = 1;
+    Para_grid_search.d1_begin = -5;//底数为2，下同,搜索参数时第一个参数d1必须是核函数参数g，第二个参数d2是分类器参数(nu or C)
+    Para_grid_search.d1_end = -15;//10;
+    Para_grid_search.d1_step = -1;
     Para_grid_search.d2_begin = -5;//注意nu参数取值范围（0,1）开区间
-    Para_grid_search.d2_end = -0.05;
+    Para_grid_search.d2_end = 5;
     Para_grid_search.d2_step = 1;//1;
     Para_grid_search.v_fold = 4;
     Para_grid_search.flag_predict = 0;// 0;//1,表示每个参数在交叉验证之后，再进行模型训练，然后在对测试样本做预测；0表示不做预测

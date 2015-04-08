@@ -5,6 +5,8 @@
 #include <errno.h>
 #include "svm.h"
 #include "svm-train.h"
+#include "common.h"
+
 #define Malloc(type,n) (type *)malloc((n)*sizeof(type))
 
 static void print_null(const char *s) {}
@@ -119,7 +121,7 @@ int main_svm_train(PARA_SVM_TRAIN *para_svm_train)
 	free(x_space);
 	free(line);
 
-	return 0;
+    return SUCCESS;
 }
 
 void do_cross_validation()

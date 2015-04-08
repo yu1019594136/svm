@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "svm-scale.h"
+#include "common.h"
 
 static void exit_with_help()//添加static，保证各个C文件的同名函数不冲突
 {
@@ -350,7 +351,7 @@ int main_svm_scale(PARA_SVM_SCALE *para_svm_scale)
 	free(feature_min);
 	fclose(fp);
     fclose(fp_result_filename);
-	return 0;
+    return SUCCESS;
 }
 
 char* readline(FILE *input)

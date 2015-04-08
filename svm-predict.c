@@ -5,6 +5,7 @@
 #include <errno.h>
 #include "svm.h"
 #include "svm-predict.h"
+#include "common.h"
 
 static int print_null(const char *s,...) {return 0;}
 
@@ -272,5 +273,5 @@ int main_svm_predict(PARA_SVM_PREDICT *para_svm_predict)
 	free(line);
 	fclose(input);
 	fclose(output);
-	return 0;
+    return SUCCESS;
 }
