@@ -160,6 +160,7 @@ void predict(FILE *input, FILE *output)
 	else
     {
         info("Accuracy = %g%% (%d/%d) (classification)\n",(double)correct/total*100,correct,total);
+        printf("Predict Accuracy = %g%%  (%d/%d)\n",(double)correct/total*100,correct,total);//zy 改
         result_predict_accuracy.correct = correct;//zy,
         result_predict_accuracy.total = total;//zy,
     }

@@ -4,7 +4,8 @@ HEADERS += \
     svm-train.h \
     svm-predict.h \
     grid_search.h \
-    common.h
+    common.h \
+    aco_search.h
 
 SOURCES += \
     svm.cpp \
@@ -13,7 +14,8 @@ SOURCES += \
     svm-train.c \
     svm-predict.c \
     grid_search.c \
-    common.c
+    common.c \
+    aco_search.c
 
 OTHER_FILES += \
     svm.def

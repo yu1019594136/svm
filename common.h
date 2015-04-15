@@ -23,6 +23,13 @@ enum SWITCH{
     OPEN
 };
 
+enum STATUS{
+    NO = 0,
+    YES
+};
+
+int max_index_func(double *arr, int len);
+
 #ifdef __cplusplus
 }
 #endif

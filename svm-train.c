@@ -162,7 +162,7 @@ void do_cross_validation()
 		for(i=0;i<prob.l;i++)
 			if(target[i] == prob.y[i])
 				++total_correct;
-		printf("Cross Validation Accuracy = %g%%\n",100.0*total_correct/prob.l); 
+        printf("Cross Validation Accuracy = %g%%  (%d/%d)\n",100.0*total_correct/prob.l,total_correct,prob.l); //zy 改
         result_cross_validation_accuracy.correct = total_correct;//zy,
         result_cross_validation_accuracy.total = prob.l;//zy,
 	}
