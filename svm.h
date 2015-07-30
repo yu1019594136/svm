@@ -94,6 +94,7 @@ typedef struct
     char *range_filepath;
     char *train_data_scaled_filepath;
     char *test_data_scaled_filepath;
+    char *test_data_scaled_filepath_other_file;
     char *model_filepath;
     char *predict_accuracy_filepath;
     char *grid_search_result;
