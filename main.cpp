@@ -1,10 +1,20 @@
 #include "widget.h"
 #include <QApplication>
+#include <QStyle>
+#include <QStyleFactory>
 #include <QTextCodec> //添加头文件
+#include <QDebug>
 
 int main(int argc, char *argv[])
 {
+    QApplication::setStyle(QStyleFactory::create(QString("Cleanlooks"))); // styleName 就是上图所列
+
+    QApplication::setPalette(QApplication::style()->standardPalette()); // 选择风格默认颜色
+
+//    qDebug() << QStyleFactory::keys();
+
     QApplication a(argc, argv);
+
     Widget w;
 
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8")); //使程序中可以使用中文

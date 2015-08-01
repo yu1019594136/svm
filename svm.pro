@@ -40,4 +40,6 @@ FORMS    += widget.ui
 RESOURCES += \
     background_image.qrc
 
-RC_FILE = application_pic.rc
+#RC_FILE = logo_xueyuan.rc
+RC_FILE = my_icon.rc
+

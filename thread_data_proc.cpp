@@ -45,28 +45,30 @@ void DataProcessThread::run()
 {
     char temp_str[MAX_STR_LEN] = {0};
 
-    emit send_to_textbrower_display_output("DataProcessThread start!\n");
+    emit send_to_textbrower_display_output(tr("数据处理线程：启动!\n"));
 
     while(!stopped)
     {
         if(excute_svm_task)
         {
-            send_to_textbrower_display_output("DataProcessThread starts to excute svm_task!\n");
+            send_to_textbrower_display_output(tr("数据处理线程：开始执行任务\n"));
 
             //test();
 
             /* 1、检测是否进行数据缩放 */
             if(svm_task.svm_scale_task)
             {
+                emit send_to_textbrower_display_output(tr("任务执行提示：训练数据压缩开始...\n"));
                 /* 缩放训练样本 */
                 if(main_svm_scale(&Para_svm_scale) == SUCCESS)
-                    send_to_textbrower_display_output(tr("训练数据压缩完成！"));
+                    emit send_to_textbrower_display_output(tr("任务执行提示：训练数据压缩完成！\n"));
                 else
-                    send_to_textbrower_display_output(tr("训练数据压缩出错！请检查参数和数据文件格式"));
+                    emit send_to_textbrower_display_output(tr("任务执行错误：训练数据压缩出错！请检查参数和数据文件格式。\n"));
 
                 /* 依据参数缩放还是依据规则文件缩放将导致对训练文件和测试文件不同的处理 */
                 if(Svm_all_filepath.test_data_filepath != NULL)
                 {
+                    emit send_to_textbrower_display_output(tr("任务执行提示：测试数据压缩开始...\n"));
                     /* 检查是否有测试数据需要缩放 */
                     if(svm_file_source.restore_filepath_source == SCALE_ACCORD_TO_PARA)//1、先依据参数对训练样本进行缩放并保存规则文件，再利用规则文件对测试样本进行缩放
                     {
@@ -83,49 +85,81 @@ void DataProcessThread::run()
                     }
 
                     if(main_svm_scale(&Para_svm_scale) == SUCCESS)
-                        send_to_textbrower_display_output(tr("测试数据压缩完成！"));
+                        emit send_to_textbrower_display_output(tr("任务执行提示：测试数据压缩完成！\n"));
                     else
-                        send_to_textbrower_display_output(tr("测试数据压缩出错！请检查参数和数据文件格式"));
+                        emit send_to_textbrower_display_output(tr("任务执行错误：测试数据压缩出错！请检查参数和数据文件格式\n"));
                 }
             }
 
-            /* 2、检测参是否进行参数搜索 */
-//            if()
-
-            /* 3、分类器训练 */
-            if(svm_task.svm_train_task)
+            /* 2、优先检测参是否进行参数搜索 */
+            if(svm_task.svm_grid_search_task || svm_task.svm_aco_search_task)
             {
-                if(Para_svm_train.cross_validation)//如果参数中选择了交叉验证那么.....
-                    send_to_textbrower_display_output(tr("交叉验证...\n"));
-                else
-                    send_to_textbrower_display_output(tr("分类器训练 ...\n"));
-
-                if((main_svm_train(&Para_svm_train)) == SUCCESS)
-                    send_to_textbrower_display_output(tr("训练(交叉验证)完成!\n"));
-                else
-                    send_to_textbrower_display_output(tr("训练(交叉验证)出错!\n"));
-
-                if(Para_svm_train.cross_validation)//如果参数中选择了交叉验证那么此处输出正确率
+                if(svm_task.svm_grid_search_task)
                 {
-                    sprintf(temp_str, "correct: %d, total: %d\n",result_cross_validation_accuracy.correct, result_cross_validation_accuracy.total);
-                    send_to_textbrower_display_output(temp_str);
+                    emit send_to_textbrower_display_output(tr("任务执行提示：格点搜索开始...\n"));
+
+                    if(grid_search(&Para_grid_search, &Para_svm_train, &Para_svm_predict) == SUCCESS)
+                    {
+                        sprintf(temp_str, "任务执行提示：格点搜索完成!\n结果保存在 %s\n",Para_grid_search.output_file);
+                        emit send_to_textbrower_display_output(tr(temp_str));
+                    }
+                    else
+                    {
+                        emit send_to_textbrower_display_output(tr("任务执行错误：格点搜索失败！\n"));
+                    }
                 }
 
+                if(svm_task.svm_aco_search_task)
+                {
+                    emit send_to_textbrower_display_output(tr("任务执行提示：蚁群搜索开始...\n"));
+
+                    if(aco_search(&Para_aco_search, &Para_svm_train, &Para_svm_predict) == SUCCESS)
+                    {
+                        sprintf(temp_str, "任务执行提示：蚁群搜索完成!\n结果保存在 %s\n",Para_aco_search.output_file);
+                        emit send_to_textbrower_display_output(tr(temp_str));
+                    }
+                    else
+                        emit send_to_textbrower_display_output(tr("任务执行错误：蚁群搜索失败！\n"));
+                }
             }
-
-            /* 4、样本预测训练 */
-            if(svm_task.svm_predict_task)
+            else
             {
-                send_to_textbrower_display_output(tr("预测...\n"));
+                /* 3、分类器训练 */
+                if(svm_task.svm_train_task)
+                {
+                    if(Para_svm_train.cross_validation)//如果参数中选择了交叉验证那么.....
+                        emit send_to_textbrower_display_output(tr("任务执行提示：交叉验证开始...\n"));
+                    else
+                        emit send_to_textbrower_display_output(tr("任务执行提示：分类器训练开始...\n"));
 
-                if((main_svm_predict(&Para_svm_predict)) == SUCCESS)
-                    send_to_textbrower_display_output(tr("预测完成!\n"));
-                else
-                    send_to_textbrower_display_output(tr("预测出错!\n"));
+                    if((main_svm_train(&Para_svm_train)) == SUCCESS)
+                        emit send_to_textbrower_display_output(tr("任务执行提示：训练(交叉验证)完成!\n"));
+                    else
+                        emit send_to_textbrower_display_output(tr("任务执行错误：训练(交叉验证)出错!\n"));
 
-                //预测，打印正确率
-                sprintf(temp_str, "correct: %d, total: %d\n",result_predict_accuracy.correct,result_predict_accuracy.total);
-                send_to_textbrower_display_output(temp_str);
+                    if(Para_svm_train.cross_validation)//如果参数中选择了交叉验证那么此处输出正确率
+                    {
+                        sprintf(temp_str, "correct: %d, total: %d\n",result_cross_validation_accuracy.correct, result_cross_validation_accuracy.total);
+                        emit send_to_textbrower_display_output(temp_str);
+                    }
+
+                }
+
+                /* 4、样本预测训练 */
+                if(svm_task.svm_predict_task)
+                {
+                    send_to_textbrower_display_output(tr("任务执行提示：预测开始...\n"));
+
+                    if((main_svm_predict(&Para_svm_predict)) == SUCCESS)
+                    {
+                        emit send_to_textbrower_display_output(tr("任务执行提示：预测完成!\n"));
+                        //预测，打印正确率
+                        sprintf(temp_str, "correct: %d, total: %d\n",result_predict_accuracy.correct,result_predict_accuracy.total);
+                        emit send_to_textbrower_display_output(temp_str);
+                    }
+                    else
+                        emit send_to_textbrower_display_output(tr("任务执行错误：预测出错!\n"));
+                }
             }
 
             excute_svm_task = false;
@@ -133,7 +167,7 @@ void DataProcessThread::run()
         }
     }
 
-    emit send_to_textbrower_display_output("DataProcessThread done!\n");
+    emit send_to_textbrower_display_output(tr("数据处理线程：退出！\n"));
 }
 
 void DataProcessThread::stop()
@@ -144,8 +178,8 @@ void DataProcessThread::stop()
 void DataProcessThread::recei_fro_widget_svm_task(SVM_TASK svm_task_para)
 {
     svm_task = svm_task_para;
+    emit send_to_textbrower_display_output(tr("数据处理线程：接收到任务!\n"));
     excute_svm_task = true;
-    send_to_textbrower_display_output("DataProcessThread receives svm_task!\n");
 }
 
 void DataProcessThread::test()

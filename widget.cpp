@@ -337,6 +337,7 @@ void Widget::set_parameters_to_default()
     //数据缩放模块默认参数
     ui->radioButton->setChecked(true);
     ui->lineEdit->setText(QString("*"));
+    ui->lineEdit_2->setText(QString(""));
     ui->doubleSpinBox->setValue(Para_svm_scale.l);
     ui->doubleSpinBox_2->setValue(Para_svm_scale.u);
     ui->checkBox->setChecked(false);
@@ -545,6 +546,8 @@ void Widget::kernel_type_para_enbale(int index)
 void Widget::on_pushButton_11_clicked()
 {
     set_parameters_to_default();
+    ui->textBrowser->clear();
+    ui->textBrowser->append(tr("提示：界面参数已重置，历史输出被清空。"));
 }
 //程序退出按钮
 void Widget::on_pushButton_13_clicked()
@@ -614,27 +617,6 @@ void Widget::on_pushButton_12_clicked()
 {
     QString num_temp;
 
-//    /* 显示将要执行的计算任务到文本浏览器，svm_task变量在槽函数中实时被更新 */
-//    ui->textBrowser->append("svm_task.svm_scale_task = " + num_temp.setNum(svm_task.svm_scale_task));
-//    ui->textBrowser->append("svm_task.svm_train_task = " + num_temp.setNum(svm_task.svm_train_task));
-//    ui->textBrowser->append("svm_task..svm_predict_task = " + num_temp.setNum(svm_task.svm_predict_task));
-//    ui->textBrowser->append("svm_task.svm_grid_search_task = " + num_temp.setNum(svm_task.svm_grid_search_task));
-//    ui->textBrowser->append("svm_task.svm_aco_search_task = " + num_temp.setNum(svm_task.svm_aco_search_task));
-
-//    /* 显示数据文件来源信息到文本浏览器，svm_file_source变量在槽函数中实时被更新 */
-//    ui->textBrowser->append("FILE_FROM_LAST_TASK = 0");
-//    ui->textBrowser->append("FILE_FROM_OTHER_FILE = 1");
-//    ui->textBrowser->append("SCALE_ACCORD_TO_FILE = 2");
-//    ui->textBrowser->append("SCALE_ACCORD_TO_PARA = 3");
-//    ui->textBrowser->append("Y_SCALING_YES = 4");
-//    ui->textBrowser->append("Y_SCALING_NO = 5");
-
-//    ui->textBrowser->append("svm_file_source.restore_filepath_source = " +  num_temp.setNum(svm_file_source.restore_filepath_source));
-//    ui->textBrowser->append("svm_file_source.model_filepath_source = " + num_temp.setNum(svm_file_source.model_filepath_source));
-//    ui->textBrowser->append("svm_file_source.train_data_scaled_filepath_source = " + num_temp.setNum(svm_file_source.train_data_scaled_filepath_source));
-//    ui->textBrowser->append("svm_file_source.test_data_scaled_filepath_source = " + num_temp.setNum(svm_file_source.test_data_scaled_filepath_source));
-//    ui->textBrowser->append("svm_file_source.y_scaling_flag = " + num_temp.setNum(svm_file_source.y_scaling_flag));
-
     /* 读取全部的界面参数 */
     read_parameters_from_interface();
 
@@ -643,13 +625,14 @@ void Widget::on_pushButton_12_clicked()
      * PARA_SVM_PREDICT、PARA_GRID_SEARCH、PARA_ACO_SEARCH中 */
     if(parse_svm_parameters() == SUCCESS)
     {
+        ui->textBrowser->append(tr("提示：参数检查基本通过，无设置错误。但不保证所有参数绝对正确！\n"));
         emit send_to_datapro_svm_task(svm_task);
 
         /* 禁能开始按钮一直到数据线程梳理数据完成 */
         ui->pushButton_12->setEnabled(false);
     }
     else
-        ui->textBrowser->append(tr("参数解析出错，请检查参数。"));
+        ui->textBrowser->append(tr("错误：参数解析出错，请检查参数！\n"));
 
 }
 
@@ -899,7 +882,7 @@ int Widget::write_parameters_to_file(char *savefile)
     }
     else
     {
-        ui->textBrowser->append("open file FAILED!");
+        ui->textBrowser->append(tr("错误：将界面参数写入到文件失败！"));
         return ERROR;
     }
 
@@ -917,6 +900,7 @@ void Widget::on_pushButton_9_clicked()
 {
     QByteArray ba;
     char *savefile;
+    char temp_str[1024] = {0};
     QString fileName;
     fileName = QFileDialog::getSaveFileName(this, tr("保存参数文件到"), tr("C:\\svm_parameters.txt"), tr("文本文件 (*)"));
 
@@ -933,15 +917,16 @@ void Widget::on_pushButton_9_clicked()
         /* 将全部的界面参数记录到文件svm_parameter.txt */
         if(write_parameters_to_file(savefile) == SUCCESS)
         {
-            ui->textBrowser->append("save parameters to file SUCCESS!\nparameters is saved in " + fileName);
+            sprintf(temp_str, "提示：保存界面参数到文件成功，参数保存于 %s\n", savefile);
+            ui->textBrowser->append(tr(temp_str));
         }
         else
         {
-            ui->textBrowser->append("save parameters to file FAILED!");
+            ui->textBrowser->append(tr("错误：保存界面参数到文件出错！"));
         }
     }
     else
-        ui->textBrowser->append("cancle saving the parameters file!");
+        ui->textBrowser->append(tr("提示：取消保存界面参数。"));
 }
 
 //从文件读取界面参数
@@ -949,11 +934,10 @@ void Widget::on_pushButton_10_clicked()
 {
     QByteArray ba;
     char *savefile;
+    char temp_str[1024] = {0};
     QString fileName = QFileDialog::getOpenFileName(this,tr("请选择一个参数文件"), tr("C:\\"),tr("文本文件(*)"));
 
     fileName.replace('/', "\\");
-
-    ui->textBrowser->append("parameter file: " + fileName);
 
     if(fileName != NULL)
     {
@@ -962,15 +946,16 @@ void Widget::on_pushButton_10_clicked()
 
         if(read_parameters_from_file(savefile) == SUCCESS)
         {
-            ui->textBrowser->append("read parameters from file SUCCESS!\nparameter file: " + fileName);
+            sprintf(temp_str, "提示：从文件读取参数成功，参数来源于文件 %s\n", savefile);
+            ui->textBrowser->append(tr(temp_str));
         }
         else
         {
-            ui->textBrowser->append("read parameters from file FAILED!");
+            ui->textBrowser->append(tr("错误：从文件读取界面参数出错！"));
         }
     }
     else
-        ui->textBrowser->append("cancle choose a parameter file!");
+        ui->textBrowser->append(tr("提示：取消从文件读取界面参数。"));
 
 }
 
@@ -1071,43 +1056,27 @@ int Widget::read_parameters_from_file(char *savefile)
         /* 3、读取svm_all_filepath_on_interface结构体，主要是文件名参数，将其解析并设置到界面上 */
         fscanf(fp, "svm_all_filepath_on_interface.train_data_filepath = %s\n", temp_str);
         ui->lineEdit->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.test_data_filepath = %s\n", temp_str);
         ui->lineEdit_2->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.restore_filename = %s\n", temp_str);
         ui->lineEdit_4->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.train_data_scaled_filepath = %s\n", temp_str);
         ui->lineEdit_5->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.model_filepath = %s\n", temp_str);
         ui->lineEdit_7->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.test_data_scaled_filepath = %s\n", temp_str);
         ui->lineEdit_8->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.label_and_weight = %s\n", temp_str);
         ui->lineEdit_6->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         fscanf(fp, "svm_all_filepath_on_interface.empiri_best_path = %s\n\n", temp_str);
         ui->lineEdit_9->setText(temp_str);
-        ui->textBrowser->append("read from file, temp_str = ");
-        ui->textBrowser->append(temp_str);
 
         /* 4、读取界面中所有整数以及浮点数控件的输入Para_svm_scale、Para_svm_train、Para_svm_predict、Para_grid_search、Para_aco_search，将其解析并设置到界面上 */
         fscanf(fp, "Para_svm_scale.l = %f\n", &temp_float);
@@ -1245,7 +1214,7 @@ int Widget::read_parameters_from_file(char *savefile)
     }
     else
     {
-        ui->textBrowser->append("open file failed!");
+        ui->textBrowser->append(tr("错误：读取参数文件失败！"));
         return ERROR;
     }
     return SUCCESS;
@@ -1325,12 +1294,12 @@ int Widget::parse_svm_parameters()
         if(svm_file_source.y_scaling_flag == Y_SCALING_YES)
         {
             Para_svm_scale.y_scaling = 1;
-            ui->textBrowser->append("Para_svm_scale.y_scaling = 1;");
+            ui->textBrowser->append(tr("缩放模块参数检查，提示：进行y缩放，Para_svm_scale.y_scaling = 1;"));
         }
         else if(svm_file_source.y_scaling_flag == Y_SCALING_NO)
         {
             Para_svm_scale.y_scaling = 0;
-            ui->textBrowser->append("Para_svm_scale.y_scaling = 0;");
+            ui->textBrowser->append(tr("缩放模块参数检查，提示：不进行y缩放，Para_svm_scale.y_scaling = 0;"));
         }
 
         /* 依据参数缩放还是依据规则文件缩放将导致对训练文件和测试文件不同的处理 */
@@ -1348,7 +1317,7 @@ int Widget::parse_svm_parameters()
         {
             if(!svm_task.svm_scale_task)
             {
-                ui->textBrowser->append(tr("分类器模块训练参数检查，错误：训练样本来自于缩放步骤，但缩放模块没有使能。"));
+                ui->textBrowser->append(tr("训练模块参数检查，错误：训练样本来自于缩放步骤，但缩放模块没有使能。"));
                 return ERROR;
             }
             else
@@ -1377,7 +1346,7 @@ int Widget::parse_svm_parameters()
         {
             if(Para_svm_train.svm_train_parameter.nr_weight != svm_all_filepath_on_interface.label_and_weight.count(":"))
             {
-                ui->textBrowser->append(tr("分类器模块训练参数检查，错误：如果变量nr_weight大于0，则nr_weight和label_and_weight中的类别数量一致。"));
+                ui->textBrowser->append(tr("训练模块参数检查，错误：如果变量nr_weight大于0，则nr_weight和label_and_weight中的类别数量一致。"));
                 return ERROR;
             }
             else//解析
@@ -1403,7 +1372,7 @@ int Widget::parse_svm_parameters()
         }
         else
         {
-            ui->textBrowser->append(tr("分类器模块训练参数检查，提示：没有设置惩罚系数权重系数。"));
+            ui->textBrowser->append(tr("训练模块参数检查，提示：没有设置惩罚系数权重系数。"));
             weight = NULL;
             weight_label = NULL;
         }
@@ -1441,7 +1410,7 @@ int Widget::parse_svm_parameters()
         {
             if(!svm_task.svm_train_task)
             {
-                ui->textBrowser->append(tr("预测模块训练参数检查，错误：分类器模型来自于训练步骤，但训练模块没有使能。"));
+                ui->textBrowser->append(tr("预测模块参数检查，错误：分类器模型文件来自于训练步骤，但训练模块没有使能。"));
                 return ERROR;
             }
             else
@@ -1463,14 +1432,14 @@ int Widget::parse_svm_parameters()
         {
             if(!svm_task.svm_scale_task)
             {
-                ui->textBrowser->append(tr("预测模块训练参数检查，错误：测试样本来自于缩放步骤，但缩放模块没有使能。"));
+                ui->textBrowser->append(tr("预测模块参数检查，错误：测试样本来自于缩放步骤，但缩放模块没有使能。"));
                 return ERROR;
             }
             else
             {
                 if(Svm_all_filepath.test_data_filepath == NULL)//缩放模块的测试样本没有指定，为空
                 {
-                    ui->textBrowser->append(tr("预测模块训练参数检查，错误：测试样本来自于缩放步骤，但缩放模块的测试样本为空。"));
+                    ui->textBrowser->append(tr("预测模块参数检查，错误：测试样本来自于缩放步骤，但缩放模块的测试样本为空。"));
                     return ERROR;
                 }
                 else
@@ -1637,4 +1606,6 @@ void Widget::recei_fro_datapro_task_done()
         free(weight_label);
         weight_label = NULL;
     }
+
+    ui->textBrowser->append(tr("任务执行完毕！\n"));
 }

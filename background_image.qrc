@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/application_icon">
-        <file>application_pic.ico</file>
+        <file>my_icon.ico</file>
+        <file>logo_xueyuan.ico</file>
     </qresource>
 </RCC>
