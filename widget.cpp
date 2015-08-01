@@ -4,6 +4,7 @@
 #include <QFileDialog>
 #include <QMetaType>
 #include <stdio.h>
+#include <QFile>
 
 Q_DECLARE_METATYPE(SVM_TASK)
 //Q_DECLARE_METATYPE(SVM_ALL_INPUT_FILEPATH_ON_INTERFACE)
@@ -617,15 +618,20 @@ void Widget::on_pushButton_12_clicked()
 {
     QString num_temp;
 
+    ui->textBrowser->append(tr("\n************** 开始 *************\n"));
+    ui->textBrowser->append(tr("提示：读取界面参数..."));
     /* 读取全部的界面参数 */
     read_parameters_from_interface();
+    ui->textBrowser->append(tr("提示：读取界面参数完成"));
 
     /* 解析各个结构体（SVM_ALL_INPUT_FILEPATH_ON_INTERFACE、SVM_FILE_SOURCE）中的数据，
      * 并将最后的算法能够接受的数据填写到SVM_ALL_FILEPATH、PARA_SVM_SCALE、PARA_SVM_TRAIN、
      * PARA_SVM_PREDICT、PARA_GRID_SEARCH、PARA_ACO_SEARCH中 */
+
+    ui->textBrowser->append(tr("提示：解析界面参数..."));
     if(parse_svm_parameters() == SUCCESS)
     {
-        ui->textBrowser->append(tr("提示：参数检查基本通过，无设置错误。但不保证所有参数绝对正确！\n"));
+        ui->textBrowser->append(tr("提示：界面参数解析基本通过，无错误设置。但不保证全部任务都能顺利执行！\n"));
         emit send_to_datapro_svm_task(svm_task);
 
         /* 禁能开始按钮一直到数据线程梳理数据完成 */
@@ -1227,23 +1233,41 @@ int Widget::parse_svm_parameters()
 {
     QByteArray ba;
 
+    /* 任务数量检查 */
+    if(!(svm_task.svm_train_task || svm_task.svm_scale_task || svm_task.svm_predict_task || svm_task.svm_grid_search_task || svm_task.svm_aco_search_task))
+    {
+        ui->textBrowser->append(tr("错误：没有选中任何任务！\n"));
+        return ERROR;
+    }
+
     /* 解析缩放模块参数 */
     if(svm_task.svm_scale_task)//如果进行数据缩放，
     {
         /* 解析训练样本文件名 */
         if(svm_all_filepath_on_interface.train_data_filepath != "")
         {
-            ba = svm_all_filepath_on_interface.train_data_filepath.toLatin1();
-            Svm_all_filepath.train_data_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
-            strcpy(Svm_all_filepath.train_data_filepath, ba.data());
+            /* 检查文件是否存在 */
+            QFile temp_qfile1(svm_all_filepath_on_interface.train_data_filepath);
+            if(temp_qfile1.exists())
+            {
+                ba = svm_all_filepath_on_interface.train_data_filepath.toLatin1();
+                Svm_all_filepath.train_data_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
+                strcpy(Svm_all_filepath.train_data_filepath, ba.data());
 
-            Para_svm_scale.data_set = Svm_all_filepath.train_data_filepath;
+                Para_svm_scale.data_set = Svm_all_filepath.train_data_filepath;
 
-            Svm_all_filepath.train_data_scaled_filepath = (char *)malloc(strlen(Svm_all_filepath.train_data_filepath) + strlen(".scaled") + 1);
-            strcpy(Svm_all_filepath.train_data_scaled_filepath, Svm_all_filepath.train_data_filepath);
-            strcat(Svm_all_filepath.train_data_scaled_filepath, ".scaled");
+                Svm_all_filepath.train_data_scaled_filepath = (char *)malloc(strlen(Svm_all_filepath.train_data_filepath) + strlen(".scaled") + 1);
+                strcpy(Svm_all_filepath.train_data_scaled_filepath, Svm_all_filepath.train_data_filepath);
+                strcat(Svm_all_filepath.train_data_scaled_filepath, ".scaled");
 
-            Para_svm_scale.result_filename = Svm_all_filepath.train_data_scaled_filepath;
+                Para_svm_scale.result_filename = Svm_all_filepath.train_data_scaled_filepath;
+            }
+            else
+            {
+                ui->textBrowser->append(tr("缩放模块参数检查，错误：指定的训练样本文件不存在。"));
+                return ERROR;
+            }
+
         }
         else
         {
@@ -1255,13 +1279,24 @@ int Widget::parse_svm_parameters()
         /* 判断是否为空指针 */
         if(svm_all_filepath_on_interface.test_data_filepath != "")
         {
-            ba = svm_all_filepath_on_interface.test_data_filepath.toLatin1();
-            Svm_all_filepath.test_data_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
-            strcpy(Svm_all_filepath.test_data_filepath, ba.data());
+            /* 检查文件是否存在 */
 
-            Svm_all_filepath.test_data_scaled_filepath = (char *)malloc(strlen(Svm_all_filepath.test_data_filepath) + strlen(".scaled") + 1);
-            strcpy(Svm_all_filepath.test_data_scaled_filepath, Svm_all_filepath.test_data_filepath);
-            strcat(Svm_all_filepath.test_data_scaled_filepath, ".scaled");
+            QFile temp_qfile2(svm_all_filepath_on_interface.test_data_filepath);
+            if(temp_qfile2.exists())
+            {
+                ba = svm_all_filepath_on_interface.test_data_filepath.toLatin1();
+                Svm_all_filepath.test_data_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
+                strcpy(Svm_all_filepath.test_data_filepath, ba.data());
+
+                Svm_all_filepath.test_data_scaled_filepath = (char *)malloc(strlen(Svm_all_filepath.test_data_filepath) + strlen(".scaled") + 1);
+                strcpy(Svm_all_filepath.test_data_scaled_filepath, Svm_all_filepath.test_data_filepath);
+                strcat(Svm_all_filepath.test_data_scaled_filepath, ".scaled");
+            }
+            else
+            {
+                ui->textBrowser->append(tr("缩放模块参数检查，错误：指定的测试样本文件不存在。"));
+                return ERROR;
+            }
         }
         else
         {
@@ -1283,11 +1318,20 @@ int Widget::parse_svm_parameters()
         {
             Para_svm_scale.save_filename = NULL;
 
-            ba = svm_all_filepath_on_interface.restore_filename.toLatin1();
-            Svm_all_filepath.range_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
-            strcpy(Svm_all_filepath.range_filepath, ba.data());
+            QFile temp_qfile3(svm_all_filepath_on_interface.restore_filename);
+            if(temp_qfile3.exists())
+            {
+                ba = svm_all_filepath_on_interface.restore_filename.toLatin1();
+                Svm_all_filepath.range_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
+                strcpy(Svm_all_filepath.range_filepath, ba.data());
 
-            Para_svm_scale.restore_filename = Svm_all_filepath.range_filepath;
+                Para_svm_scale.restore_filename = Svm_all_filepath.range_filepath;
+            }
+            else
+            {
+                ui->textBrowser->append(tr("缩放模块参数检查，错误：指定的规则文件不存在。"));
+                return ERROR;
+            }
         }
 
         /* 解析是否进行y_scaling */
@@ -1327,11 +1371,21 @@ int Widget::parse_svm_parameters()
         }
         else if(svm_file_source.train_data_scaled_filepath_source == FILE_FROM_OTHER_FILE)//如果训练样本来自于其他文件
         {
-            ba = svm_all_filepath_on_interface.train_data_scaled_filepath.toLatin1();
-            Svm_all_filepath.train_data_scaled_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
-            strcpy(Svm_all_filepath.train_data_scaled_filepath, ba.data());
+            QFile temp_qfile4(svm_all_filepath_on_interface.train_data_scaled_filepath);
+            if(temp_qfile4.exists())
+            {
+                ba = svm_all_filepath_on_interface.train_data_scaled_filepath.toLatin1();
+                Svm_all_filepath.train_data_scaled_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
+                strcpy(Svm_all_filepath.train_data_scaled_filepath, ba.data());
 
-            Para_svm_train.training_set_file = Svm_all_filepath.train_data_scaled_filepath;
+                Para_svm_train.training_set_file = Svm_all_filepath.train_data_scaled_filepath;
+            }
+            else
+            {
+                ui->textBrowser->append(tr("训练模块参数检查，错误：指定的训练样本文件不存在"));
+                return ERROR;
+            }
+
         }
 
         /* 解析训练模块的输出文件，模型文件 */
@@ -1420,11 +1474,21 @@ int Widget::parse_svm_parameters()
         }
         else if(svm_file_source.model_filepath_source == FILE_FROM_OTHER_FILE)//模型文件来自于其他文件
         {
-            ba = svm_all_filepath_on_interface.model_filepath.toLatin1();
-            Svm_all_filepath.model_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
-            strcpy(Svm_all_filepath.model_filepath, ba.data());
+            QFile temp_qfile5(svm_all_filepath_on_interface.model_filepath);
+            if(temp_qfile5.exists())
+            {
+                ba = svm_all_filepath_on_interface.model_filepath.toLatin1();
+                Svm_all_filepath.model_filepath = (char *)malloc(sizeof(char) * (ba.size() + 1));
+                strcpy(Svm_all_filepath.model_filepath, ba.data());
 
-            Para_svm_predict.model_file = Svm_all_filepath.model_filepath;
+                Para_svm_predict.model_file = Svm_all_filepath.model_filepath;
+            }
+            else
+            {
+                ui->textBrowser->append(tr("预测模块参数检查，错误：指定的分类器模型文件不存在。"));
+                return ERROR;
+            }
+
         }
 
         /* 解析测试样本来源 */
@@ -1457,18 +1521,27 @@ int Widget::parse_svm_parameters()
         }
         else if(svm_file_source.test_data_scaled_filepath_source == FILE_FROM_OTHER_FILE)
         {
-            ba = svm_all_filepath_on_interface.test_data_scaled_filepath.toLatin1();
-            Svm_all_filepath.test_data_scaled_filepath_other_file = (char *)malloc(sizeof(char) * (ba.size() + 1));
-            strcpy(Svm_all_filepath.test_data_scaled_filepath_other_file, ba.data());
+            QFile temp_qfile6(svm_all_filepath_on_interface.test_data_scaled_filepath);
+            if(temp_qfile6.exists())
+            {
+                ba = svm_all_filepath_on_interface.test_data_scaled_filepath.toLatin1();
+                Svm_all_filepath.test_data_scaled_filepath_other_file = (char *)malloc(sizeof(char) * (ba.size() + 1));
+                strcpy(Svm_all_filepath.test_data_scaled_filepath_other_file, ba.data());
 
-            Para_svm_predict.test_file = Svm_all_filepath.test_data_scaled_filepath_other_file;
+                Para_svm_predict.test_file = Svm_all_filepath.test_data_scaled_filepath_other_file;
 
-            /* 解析预测输出结果文件 */
-            Svm_all_filepath.predict_accuracy_filepath = (char *)malloc(strlen(Svm_all_filepath.test_data_scaled_filepath_other_file) + strlen(".predict_accuracy") + 1);
-            strcpy(Svm_all_filepath.predict_accuracy_filepath, Svm_all_filepath.test_data_scaled_filepath_other_file);
-            strcat(Svm_all_filepath.predict_accuracy_filepath, ".predict.accuracy");
+                /* 解析预测输出结果文件 */
+                Svm_all_filepath.predict_accuracy_filepath = (char *)malloc(strlen(Svm_all_filepath.test_data_scaled_filepath_other_file) + strlen(".predict_accuracy") + 1);
+                strcpy(Svm_all_filepath.predict_accuracy_filepath, Svm_all_filepath.test_data_scaled_filepath_other_file);
+                strcat(Svm_all_filepath.predict_accuracy_filepath, ".predict.accuracy");
 
-            Para_svm_predict.output_file = Svm_all_filepath.predict_accuracy_filepath;
+                Para_svm_predict.output_file = Svm_all_filepath.predict_accuracy_filepath;
+            }
+            else
+            {
+                ui->textBrowser->append(tr("预测模块参数检查，错误：指定的测试样本文件不存在。"));
+                return ERROR;
+            }
         }
 
     }
@@ -1608,4 +1681,5 @@ void Widget::recei_fro_datapro_task_done()
     }
 
     ui->textBrowser->append(tr("任务执行完毕！\n"));
+    ui->textBrowser->append(tr("\n************** 结束 *************\n"));
 }
