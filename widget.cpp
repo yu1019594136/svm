@@ -27,8 +27,18 @@ Widget::Widget(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //实例化一个输出显示窗口
+    disp_output = new display_output();
+    connect(this, SIGNAL(send_to_disp_output_hide_or_show(bool)), disp_output, SLOT(recei_fro_disp_output_hide_or_show(bool)), Qt::QueuedConnection);
+    connect(this, SIGNAL(send_to_disp_output_disp(QString)), disp_output, SLOT(recei_fro_disp_output_disp(QString)), Qt::QueuedConnection);
+    connect(disp_output, SIGNAL(deselect_checkbox_display_output()), this, SLOT(hide_checkbox_display_output()), Qt::QueuedConnection);
+
+    //实例化一个界面风格选择窗口
+//    interface_style = new Dialog_interface_style();
+//    connect(this, SIGNAL(show_interface_style()), interface_style, SLOT(recei_fro_widget_show_interface_style()), Qt::QueuedConnection);
+
+
     svm_task.svm_scale_task = false;
-    //svm_task.restore_filepath_source = SCALE_ACCORD_TO_PARA;
     svm_task.svm_train_task = false;
     svm_task.svm_predict_task = false;
     svm_task.svm_grid_search_task = false;
@@ -111,7 +121,7 @@ Widget::Widget(QWidget *parent) :
     dataprocess_thread = new DataProcessThread();
 
     /* dataproc线程的字符串输出到文本浏览器 */
-    connect(dataprocess_thread, SIGNAL(send_to_textbrower_display_output(QString)), this, SLOT(recei_from_datapro_display_output(QString)), Qt::QueuedConnection);
+    connect(dataprocess_thread, SIGNAL(send_to_textbrower_display_output(QString)), disp_output, SLOT(recei_fro_disp_output_disp(QString)), Qt::QueuedConnection);
     connect(this, SIGNAL(send_to_datapro_svm_task(SVM_TASK)), dataprocess_thread, SLOT(recei_fro_widget_svm_task(SVM_TASK)), Qt::QueuedConnection);
     connect(dataprocess_thread, SIGNAL(task_done()), this, SLOT(recei_fro_datapro_task_done()), Qt::QueuedConnection);
     dataprocess_thread->start();
@@ -236,14 +246,7 @@ void Widget::aco_search_module_hide_show(int state)
 }
 void Widget::display_output_hide_show(int state)
 {
-    if(state == Qt::Unchecked)
-    {
-        ui->textBrowser->hide();
-    }
-    else if(state == Qt::Checked)
-    {
-        ui->textBrowser->show();
-    }
+    emit send_to_disp_output_hide_or_show(state);
 }
 /* 参数重置，重置对象包括界面的控件和程序中的变量 */
 void Widget::set_parameters_to_default()
@@ -325,7 +328,7 @@ void Widget::set_parameters_to_default()
     ui->groupBox_3->hide();
     ui->groupBox_6->hide();
     ui->groupBox_7->hide();
-    ui->textBrowser->hide();
+//    ui->textBrowser->hide();
 
     /* 五个功能复选框置为初始未选中状态 */
     ui->checkBox_2->setChecked(false);
@@ -432,6 +435,7 @@ void Widget::restore_filename_enable(bool state)
         //svm_task.restore_filepath_source = svm_file_source.restore_filepath_source;
     }
 }
+
 //radioButton_3被选中时，svm_train.train_data_scaled_filepath:一行将被禁能
 void Widget::train_data_scaled_filepath(bool state)
 {
@@ -547,8 +551,8 @@ void Widget::kernel_type_para_enbale(int index)
 void Widget::on_pushButton_11_clicked()
 {
     set_parameters_to_default();
-    ui->textBrowser->clear();
-    ui->textBrowser->append(tr("提示：界面参数已重置，历史输出被清空。"));
+    send_to_disp_output_disp(QString("clear()"));
+    send_to_disp_output_disp(tr("提示：界面参数已重置，历史输出被清空。"));
 }
 //程序退出按钮
 void Widget::on_pushButton_13_clicked()
@@ -566,7 +570,7 @@ void Widget::on_pushButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("缩放模块：请选择一个训练数据文件"), tr("C:\\"),tr("文本文件(*)"));
     fileName.replace('/', "\\");
-    ui->textBrowser->append(tr("训练数据文件路径:") + fileName);
+    send_to_disp_output_disp(tr("训练数据文件路径:") + fileName);
     ui->lineEdit->setText(fileName);
 }
 //svm_scale.test_data_filepath:文件路劲选择
@@ -574,7 +578,7 @@ void Widget::on_pushButton_2_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("缩放模块：请选择一个测试数据文件"), tr("C:\\"),tr("文本文件(*)"));
     fileName.replace('/', "\\");
-    ui->textBrowser->append(tr("测试数据文件路径:") + fileName);
+    send_to_disp_output_disp(tr("测试数据文件路径:") + fileName);
     ui->lineEdit_2->setText(fileName);
 }
 
@@ -582,7 +586,7 @@ void Widget::on_pushButton_4_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("缩放模块：请选择一个缩放规则文件"), tr("C:\\"),tr("文本文件(*)"));
     fileName.replace('/', "\\");
-    ui->textBrowser->append(tr("缩放规则文件路径:") + fileName);
+    send_to_disp_output_disp(tr("缩放规则文件路径:") + fileName);
     ui->lineEdit_4->setText(fileName);
 }
 
@@ -590,7 +594,7 @@ void Widget::on_pushButton_5_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("训练模块：请选择一个训练样本文件"), tr("C:\\"),tr("文本文件(*)"));
     fileName.replace('/', "\\");
-    ui->textBrowser->append(tr("训练样本文件路径:") + fileName);
+    send_to_disp_output_disp(tr("训练样本文件路径:") + fileName);
     ui->lineEdit_5->setText(fileName);
 }
 
@@ -598,7 +602,7 @@ void Widget::on_pushButton_6_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("测试模块：请选择一个分类器模型文件"), tr("C:\\"),tr("文本文件(*)"));
     fileName.replace('/', "\\");
-    ui->textBrowser->append(tr("分类器模型文件路径:") + fileName);
+    send_to_disp_output_disp(tr("分类器模型文件路径:") + fileName);
     ui->lineEdit_7->setText(fileName);
 }
 
@@ -606,7 +610,7 @@ void Widget::on_pushButton_7_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,tr("测试模块：请选择一个测试样本文件"), tr("C:\\"),tr("文本文件(*)"));
     fileName.replace('/', "\\");
-    ui->textBrowser->append(tr("测试样本文件路径:") + fileName);
+    send_to_disp_output_disp(tr("测试样本文件路径:") + fileName);
     ui->lineEdit_8->setText(fileName);
 }
 //开始按钮槽函数
@@ -618,27 +622,27 @@ void Widget::on_pushButton_12_clicked()
 {
     QString num_temp;
 
-    ui->textBrowser->append(tr("\n************** 开始 *************\n"));
-    ui->textBrowser->append(tr("提示：读取界面参数..."));
+    send_to_disp_output_disp(tr("\n************** 开始 *************\n"));
+    send_to_disp_output_disp(tr("提示：读取界面参数..."));
     /* 读取全部的界面参数 */
     read_parameters_from_interface();
-    ui->textBrowser->append(tr("提示：读取界面参数完成"));
+    send_to_disp_output_disp(tr("提示：读取界面参数完成"));
 
     /* 解析各个结构体（SVM_ALL_INPUT_FILEPATH_ON_INTERFACE、SVM_FILE_SOURCE）中的数据，
      * 并将最后的算法能够接受的数据填写到SVM_ALL_FILEPATH、PARA_SVM_SCALE、PARA_SVM_TRAIN、
      * PARA_SVM_PREDICT、PARA_GRID_SEARCH、PARA_ACO_SEARCH中 */
 
-    ui->textBrowser->append(tr("提示：解析界面参数..."));
+    send_to_disp_output_disp(tr("提示：解析界面参数..."));
     if(parse_svm_parameters() == SUCCESS)
     {
-        ui->textBrowser->append(tr("提示：界面参数解析基本通过，无错误设置。但不保证全部任务都能顺利执行！\n"));
+        send_to_disp_output_disp(tr("提示：界面参数解析基本通过，无错误设置。但不保证全部任务都能顺利执行！\n"));
         emit send_to_datapro_svm_task(svm_task);
 
         /* 禁能开始按钮一直到数据线程梳理数据完成 */
         ui->pushButton_12->setEnabled(false);
     }
     else
-        ui->textBrowser->append(tr("错误：参数解析出错，请检查参数！\n"));
+        send_to_disp_output_disp(tr("错误：参数解析出错，请检查参数！\n"));
 
 }
 
@@ -888,17 +892,11 @@ int Widget::write_parameters_to_file(char *savefile)
     }
     else
     {
-        ui->textBrowser->append(tr("错误：将界面参数写入到文件失败！"));
+        send_to_disp_output_disp(tr("错误：将界面参数写入到文件失败！"));
         return ERROR;
     }
 
     return SUCCESS;
-}
-
-//显示输出到文本浏览器-槽函数
-void Widget::recei_from_datapro_display_output(QString str)
-{
-    ui->textBrowser->append(str);
 }
 
 //保存参数到文件，按钮槽函数
@@ -924,15 +922,15 @@ void Widget::on_pushButton_9_clicked()
         if(write_parameters_to_file(savefile) == SUCCESS)
         {
             sprintf(temp_str, "提示：保存界面参数到文件成功，参数保存于 %s\n", savefile);
-            ui->textBrowser->append(tr(temp_str));
+            send_to_disp_output_disp(tr(temp_str));
         }
         else
         {
-            ui->textBrowser->append(tr("错误：保存界面参数到文件出错！"));
+            send_to_disp_output_disp(tr("错误：保存界面参数到文件出错！"));
         }
     }
     else
-        ui->textBrowser->append(tr("提示：取消保存界面参数。"));
+        send_to_disp_output_disp(tr("提示：取消保存界面参数。"));
 }
 
 //从文件读取界面参数
@@ -953,15 +951,15 @@ void Widget::on_pushButton_10_clicked()
         if(read_parameters_from_file(savefile) == SUCCESS)
         {
             sprintf(temp_str, "提示：从文件读取参数成功，参数来源于文件 %s\n", savefile);
-            ui->textBrowser->append(tr(temp_str));
+            send_to_disp_output_disp(tr(temp_str));
         }
         else
         {
-            ui->textBrowser->append(tr("错误：从文件读取界面参数出错！"));
+            send_to_disp_output_disp(tr("错误：从文件读取界面参数出错！"));
         }
     }
     else
-        ui->textBrowser->append(tr("提示：取消从文件读取界面参数。"));
+        send_to_disp_output_disp(tr("提示：取消从文件读取界面参数。"));
 
 }
 
@@ -1220,7 +1218,7 @@ int Widget::read_parameters_from_file(char *savefile)
     }
     else
     {
-        ui->textBrowser->append(tr("错误：读取参数文件失败！"));
+        send_to_disp_output_disp(tr("错误：读取参数文件失败！"));
         return ERROR;
     }
     return SUCCESS;
@@ -1236,7 +1234,7 @@ int Widget::parse_svm_parameters()
     /* 任务数量检查 */
     if(!(svm_task.svm_train_task || svm_task.svm_scale_task || svm_task.svm_predict_task || svm_task.svm_grid_search_task || svm_task.svm_aco_search_task))
     {
-        ui->textBrowser->append(tr("错误：没有选中任何任务！\n"));
+        send_to_disp_output_disp(tr("错误：没有选中任何任务！\n"));
         return ERROR;
     }
 
@@ -1264,14 +1262,14 @@ int Widget::parse_svm_parameters()
             }
             else
             {
-                ui->textBrowser->append(tr("缩放模块参数检查，错误：指定的训练样本文件不存在。"));
+                send_to_disp_output_disp(tr("缩放模块参数检查，错误：指定的训练样本文件不存在。"));
                 return ERROR;
             }
 
         }
         else
         {
-            ui->textBrowser->append(tr("缩放模块参数检查，错误：没有指定训练样本。"));
+            send_to_disp_output_disp(tr("缩放模块参数检查，错误：没有指定训练样本。"));
             return ERROR;
         }
 
@@ -1294,13 +1292,13 @@ int Widget::parse_svm_parameters()
             }
             else
             {
-                ui->textBrowser->append(tr("缩放模块参数检查，错误：指定的测试样本文件不存在。"));
+                send_to_disp_output_disp(tr("缩放模块参数检查，错误：指定的测试样本文件不存在。"));
                 return ERROR;
             }
         }
         else
         {
-            ui->textBrowser->append(tr("缩放模块参数检查，警告：没有指定测试样本。"));
+            send_to_disp_output_disp(tr("缩放模块参数检查，警告：没有指定测试样本。"));
             Svm_all_filepath.test_data_filepath = NULL;
         }
 
@@ -1329,7 +1327,7 @@ int Widget::parse_svm_parameters()
             }
             else
             {
-                ui->textBrowser->append(tr("缩放模块参数检查，错误：指定的规则文件不存在。"));
+                send_to_disp_output_disp(tr("缩放模块参数检查，错误：指定的规则文件不存在。"));
                 return ERROR;
             }
         }
@@ -1338,12 +1336,12 @@ int Widget::parse_svm_parameters()
         if(svm_file_source.y_scaling_flag == Y_SCALING_YES)
         {
             Para_svm_scale.y_scaling = 1;
-            ui->textBrowser->append(tr("缩放模块参数检查，提示：进行y缩放，Para_svm_scale.y_scaling = 1;"));
+            send_to_disp_output_disp(tr("缩放模块参数检查，提示：进行y缩放，Para_svm_scale.y_scaling = 1;"));
         }
         else if(svm_file_source.y_scaling_flag == Y_SCALING_NO)
         {
             Para_svm_scale.y_scaling = 0;
-            ui->textBrowser->append(tr("缩放模块参数检查，提示：不进行y缩放，Para_svm_scale.y_scaling = 0;"));
+            send_to_disp_output_disp(tr("缩放模块参数检查，提示：不进行y缩放，Para_svm_scale.y_scaling = 0;"));
         }
 
         /* 依据参数缩放还是依据规则文件缩放将导致对训练文件和测试文件不同的处理 */
@@ -1361,7 +1359,7 @@ int Widget::parse_svm_parameters()
         {
             if(!svm_task.svm_scale_task)
             {
-                ui->textBrowser->append(tr("训练模块参数检查，错误：训练样本来自于缩放步骤，但缩放模块没有使能。"));
+                send_to_disp_output_disp(tr("训练模块参数检查，错误：训练样本来自于缩放步骤，但缩放模块没有使能。"));
                 return ERROR;
             }
             else
@@ -1382,7 +1380,7 @@ int Widget::parse_svm_parameters()
             }
             else
             {
-                ui->textBrowser->append(tr("训练模块参数检查，错误：指定的训练样本文件不存在"));
+                send_to_disp_output_disp(tr("训练模块参数检查，错误：指定的训练样本文件不存在"));
                 return ERROR;
             }
 
@@ -1400,7 +1398,7 @@ int Widget::parse_svm_parameters()
         {
             if(Para_svm_train.svm_train_parameter.nr_weight != svm_all_filepath_on_interface.label_and_weight.count(":"))
             {
-                ui->textBrowser->append(tr("训练模块参数检查，错误：如果变量nr_weight大于0，则nr_weight和label_and_weight中的类别数量一致。"));
+                send_to_disp_output_disp(tr("训练模块参数检查，错误：如果变量nr_weight大于0，则nr_weight和label_and_weight中的类别数量一致。"));
                 return ERROR;
             }
             else//解析
@@ -1426,7 +1424,7 @@ int Widget::parse_svm_parameters()
         }
         else
         {
-            ui->textBrowser->append(tr("训练模块参数检查，提示：没有设置惩罚系数权重系数。"));
+            send_to_disp_output_disp(tr("训练模块参数检查，提示：没有设置惩罚系数权重系数。"));
             weight = NULL;
             weight_label = NULL;
         }
@@ -1464,7 +1462,7 @@ int Widget::parse_svm_parameters()
         {
             if(!svm_task.svm_train_task)
             {
-                ui->textBrowser->append(tr("预测模块参数检查，错误：分类器模型文件来自于训练步骤，但训练模块没有使能。"));
+                send_to_disp_output_disp(tr("预测模块参数检查，错误：分类器模型文件来自于训练步骤，但训练模块没有使能。"));
                 return ERROR;
             }
             else
@@ -1485,7 +1483,7 @@ int Widget::parse_svm_parameters()
             }
             else
             {
-                ui->textBrowser->append(tr("预测模块参数检查，错误：指定的分类器模型文件不存在。"));
+                send_to_disp_output_disp(tr("预测模块参数检查，错误：指定的分类器模型文件不存在。"));
                 return ERROR;
             }
 
@@ -1496,14 +1494,14 @@ int Widget::parse_svm_parameters()
         {
             if(!svm_task.svm_scale_task)
             {
-                ui->textBrowser->append(tr("预测模块参数检查，错误：测试样本来自于缩放步骤，但缩放模块没有使能。"));
+                send_to_disp_output_disp(tr("预测模块参数检查，错误：测试样本来自于缩放步骤，但缩放模块没有使能。"));
                 return ERROR;
             }
             else
             {
                 if(Svm_all_filepath.test_data_filepath == NULL)//缩放模块的测试样本没有指定，为空
                 {
-                    ui->textBrowser->append(tr("预测模块参数检查，错误：测试样本来自于缩放步骤，但缩放模块的测试样本为空。"));
+                    send_to_disp_output_disp(tr("预测模块参数检查，错误：测试样本来自于缩放步骤，但缩放模块的测试样本为空。"));
                     return ERROR;
                 }
                 else
@@ -1539,7 +1537,7 @@ int Widget::parse_svm_parameters()
             }
             else
             {
-                ui->textBrowser->append(tr("预测模块参数检查，错误：指定的测试样本文件不存在。"));
+                send_to_disp_output_disp(tr("预测模块参数检查，错误：指定的测试样本文件不存在。"));
                 return ERROR;
             }
         }
@@ -1552,7 +1550,7 @@ int Widget::parse_svm_parameters()
         /* 解析格点搜索输出结果文件 */
         if(Svm_all_filepath.train_data_scaled_filepath == NULL)
         {
-            ui->textBrowser->append(tr("格点搜索模块参数检查，错误：格点搜索需要调用训练模块，但训练模块的训练样本文件没有指定，为空。"));
+            send_to_disp_output_disp(tr("格点搜索模块参数检查，错误：格点搜索需要调用训练模块，但训练模块的训练样本文件没有指定，为空。"));
             return ERROR;
         }
         else
@@ -1571,7 +1569,7 @@ int Widget::parse_svm_parameters()
         /* 解析蚁群搜索输出结果文件 */
         if(Svm_all_filepath.train_data_scaled_filepath == NULL)
         {
-            ui->textBrowser->append(tr("蚁群搜索模块参数检查，错误：蚁群搜索需要调用训练模块，但训练模块的训练样本文件没有指定，为空。"));
+            send_to_disp_output_disp(tr("蚁群搜索模块参数检查，错误：蚁群搜索需要调用训练模块，但训练模块的训练样本文件没有指定，为空。"));
             return ERROR;
         }
         else
@@ -1586,7 +1584,7 @@ int Widget::parse_svm_parameters()
         /* 解析经验最优路径 */
         if(svm_all_filepath_on_interface.empiri_best_path == "")
         {
-            ui->textBrowser->append(tr("蚁群搜索模块参数检查，错误：没有指定经验最优路径。"));
+            send_to_disp_output_disp(tr("蚁群搜索模块参数检查，错误：没有指定经验最优路径。"));
             return ERROR;
         }
         else
@@ -1680,6 +1678,18 @@ void Widget::recei_fro_datapro_task_done()
         weight_label = NULL;
     }
 
-    ui->textBrowser->append(tr("任务执行完毕！\n"));
-    ui->textBrowser->append(tr("\n************** 结束 *************\n"));
+    send_to_disp_output_disp(tr("任务执行完毕！\n"));
+    send_to_disp_output_disp(tr("\n************** 结束 *************\n"));
+}
+/* 显示输出窗口隐藏后，显示输出复选框应该为取消勾选状态 */
+void Widget::hide_checkbox_display_output()
+{
+    ui->checkBox_8->setChecked(false);
+}
+
+void Widget::on_pushButton_14_clicked()
+{
+//    emit show_interface_style();
+    Dialog_interface_style interface_style;
+    interface_style.exec();
 }

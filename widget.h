@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QScrollArea>
+#include "display_output.h"
+#include "dialog_interface_style.h"
 
 /* 数据处理线程 */
 #include "thread_data_proc.h"
@@ -52,10 +54,15 @@ public:
 signals:
     void send_to_datapro_svm_task(SVM_TASK svm_task_para);
 
-public slots:
-    void recei_from_datapro_display_output(QString str);
+    void send_to_disp_output_hide_or_show(bool state);
 
+    void send_to_disp_output_disp(QString str);
+
+public slots:
     void recei_fro_datapro_task_done();
+
+    /* 显示输出窗口隐藏后，显示输出复选框应该为取消勾选状态 */
+    void hide_checkbox_display_output();
 
 private slots:
     void y_scaling_l_u_hide_show(int state);
@@ -97,9 +104,12 @@ private slots:
 
     void on_pushButton_10_clicked();
 
+    void on_pushButton_14_clicked();
+
 private:
     Ui::Widget *ui;
     QScrollArea *pArea;
+    display_output *disp_output;
 
     /* 数据处理线程 */
     DataProcessThread *dataprocess_thread;

@@ -22,7 +22,10 @@ SOURCES += main.cpp\
     svm-train.c \
     thread_data_proc.cpp \
     common.c \
-    qcommon.cpp
+    qcommon.cpp \
+    display_output.cpp \
+    dialog_interface_style.cpp \
+    login_dialog.cpp
 
 HEADERS  += widget.h \
     aco_search.h \
@@ -33,9 +36,15 @@ HEADERS  += widget.h \
     svm-train.h \
     svm.h \
     thread_data_proc.h \
-    qcommon.h
+    qcommon.h \
+    display_output.h \
+    dialog_interface_style.h \
+    login_dialog.h
 
-FORMS    += widget.ui
+FORMS    += widget.ui \
+    display_output.ui \
+    dialog_interface_style.ui \
+    login_dialog.ui
 
 RESOURCES += \
     background_image.qrc

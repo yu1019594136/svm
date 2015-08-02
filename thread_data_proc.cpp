@@ -33,7 +33,6 @@ DataProcessThread::DataProcessThread(QObject *parent) :
     excute_svm_task = false;
 
     svm_task.svm_scale_task = false;
-    //svm_task.restore_filepath_source = SCALE_ACCORD_TO_PARA;
     svm_task.svm_train_task = false;
     svm_task.svm_predict_task = false;
     svm_task.svm_grid_search_task = false;
